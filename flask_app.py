@@ -1,6 +1,6 @@
 from flask import Flask
-from problemID import *
-from bins import *
+from problem import *
+from flask_appHelper import *
 
 
 app = Flask(__name__)
@@ -14,13 +14,12 @@ def newProblem():
         problemID (int) -- integer that can be used to reference a particular set of bins that are being packed
         binEncoding (string) -- string representation of an empty set containing no bins
     """
-    newProblemID = newProblem()
-    newBin = newBinInstance()
+    newProblemID = makeNewProblem()
     
-    problemID = newProblemID.createProblemID()
-    binEncoding = newBin.createNewBin()
-    
-    return problemID, binEncoding
+    return {
+        "problemID": newProblemID.problemID,
+        "binEncoding": newProblemID.encodedBin,
+    }
 
 
 @app.route('/placeitem/<problemID>/<size>')
@@ -32,12 +31,29 @@ def placeItem(problemID, size):
         size (int) -- size of the new item to be placed in a bin
         
     Returns:
-        { 'ID': problemID 'size' : new_item_size 'loc' : bin_number 'bins' : new_bin_encoding }
+        ID (int) - inputted problemID
+        size (int) - inputted size
+        loc (int) - number of the bin where the new item was placed
+        bins (string) - string encoding the set of bins with the new itemed placed
+        
+    Error messages:
+        "The Problem ID is not recognized" - User tries to place an item to a problem ID that does not exist
+        "This problem ID no longer accepts new items" - The problem with the input problem ID was alreay ended
     """
+    if int(problemID) >= len(listOfProblems):
+        return "The Problem ID is not recognized"
     
+    modifiedProblem = addNewItemToProblem(problemID, size)
     
-
-    return 
+    if modifiedProblem == False:
+        return "This problem ID no longer accepts new items"
+    
+    return {
+        "ID": problemID,
+        "size": size,
+        "loc": modifiedProblem.lastAddedBin,
+        "bins": modifiedProblem.encodedBin,
+    }
 
 @app.route('/endproblem/<problemID>')
 def endProblem(problemID):
@@ -47,8 +63,24 @@ def endProblem(problemID):
         problemID (int) -- integer that can be used to reference a particular set of bins that are being packed
     
     Returns:
-        { 'ID': problemID 'size' : total_size 'items' : num_items 'count' : num_bins 'wasted' : wasted_space 'bins' : bin_encoding }
+        ID (int) - inputted problemID
+        size (int) - total size of all of the items
+        items (int) - number of items placed in the collection of bins
+        count (int) - number of bins used to store the items
+        wasted_space (int) - capacity of all of the bins minus the total size of the items
+        bins (string) - string encoding of the final set of packed bins
     """
+    
+    endedProblem = endProblemByProblemID(problemID)
+    wastedSpace = calculateWastedSpace(problemID)
 
-    return 
+    return {
+        "ID": problemID,
+        "size": endedProblem.totalSize,
+        "items": endedProblem.totalLen,
+        "count": len(endedProblem.bin),
+        "wasted": wastedSpace,
+        "bins": endedProblem.encodedBin,
+        
+    }
 
