@@ -1,6 +1,8 @@
 # CS347-bin-packing
 CS 347 Assignment 1 Bin Packing
 
+*Sunny Kim, Emilie Morocco*
+
 To run the flask application, enter the following command to the terminal.
 
 ```
